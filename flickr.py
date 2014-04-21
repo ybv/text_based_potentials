@@ -6,7 +6,7 @@ import sys
 from parser import Parser
 import nltk
 import codecs
-
+from collections import defaultdict
 
 api_key = '61145ac716dc622244c5f879a0bd0e5f'
 sp = Parser()
@@ -60,16 +60,18 @@ bike_arr = ['bicycle', 'motorbike', 'bike']
 sofa_arr = ['couch', 'sofa']
 tv_arr =['tv','monitor']
 other_arr = ['boat', 'bus', 'car', 'train', 'bottle', 'chair', 'dining table', 'potted plant',  'flower', 'laptop', 'tiger', 'window']
-attr = {}
-attr['color'] = ['black', 'blue', 'brown', 'gray', 'green', 'orange', 'pink', 'red', 'violet', 'white', 'yellow']
-attr['pattern'] = ['spotted', 'striped']
-attr['shape'] = ['long', 'round', 'rectangular', 'square']
-attr['texture'] = ['furry', 'smooth', 'rough', 'shiny', 'metallic', 'vegetation', 'wooden', 'wet']
+
+attr = ['black', 'blue', 'brown', 'gray', 'green', 'orange', 'pink', 'red', 'violet', 'white', 'yellow', 'spotted', 'striped','long', 'round', 'rectangular', 'square', 'furry', 'smooth', 'rough', 'shiny', 'metallic', 'vegetation', 'wooden', 'wet']
+
+def filter_value( someList, value ):
+  for x, y in someList:
+    if x == 1:
+      yield x,y
 
 
 def _fetcher(search_text):
   flickr = flickrapi.FlickrAPI(api_key, format='json')
-  ret_list = []
+  ret_dict = defaultdict(dict)
   for x in xrange(1,2):
     sets = flickr.photos_search(text=search_text,per_page='500', page=x,extras='description')
     sets = sets.replace('jsonFlickrApi', '').strip('()')
@@ -86,42 +88,26 @@ def _fetcher(search_text):
               tupleResult = [(rel, gov.text, dep.text) for rel, gov, dep in dep.dependencies]
               for tup in tupleResult:
                 if tup[0]=='amod':
-                  ret_str = tup[2] + '--' + tup[1]
-                  ret_list.append(ret_str)
+                  if tup[2] in attr:
+                    if tup[1] in ret_dict:
+                      if tup[2] in ret_dict[tup[1]]:
+                        print "att already exists"
+                        cnt = ret_dict[tup[1]][tup[2]]
+                        cnt = cnt + 1
+                        ret_dict[tup[1]][tup[2]] = cnt
+                      else:
+                        ret_dict[tup[1]][tup[2]] = 1
+                    else:
+                      ret_dict[tup[1]] = {tup[2] : 1}
             except :
               pass
-  return ' '.join( st for st in ret_list) 
+  return ret_dict
 
-resp_writer = {}
+resp_writer = defaultdict(list)
 
-value = ''
-for item in per_arr:
-  value = value + _fetcher(item) 
-resp_writer['person'] = value
-
-value = ''
-for item in air_arr:
-  value = value + _fetcher(item) 
-resp_writer['aeroplane'] = value
-
-value = ''
-for item in bike_arr:
-  value = value + _fetcher(item) 
-resp_writer['bike'] = value
-
-value = ''
 for item in sofa_arr:
-  value = value + _fetcher(item) 
-resp_writer['sofa'] = value
-
-value = ''
-for item in tv_arr:
-  value = value + _fetcher(item)
-resp_writer['tv'] = value
-
-for item in other_arr:
-  resp_writer[item] = _fetcher(item)
-
+  resp_writer['sofa'].append(_fetcher(item))
+  
 
 with open('/Users/vgurswamy/Desktop/data.html', 'w') as outfile:
   json.dump(resp_writer, outfile, indent = 4)
