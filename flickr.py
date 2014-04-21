@@ -8,7 +8,7 @@ import nltk
 import codecs
 from collections import defaultdict
 
-api_key = '61145ac716dc622244c5f879a0bd0e5f'
+api_key = '611####4c5f879a0bd0e5f'
 sp = Parser()
 sent = nltk.data.load('tokenizers/punkt/english.pickle')
 
@@ -105,11 +105,26 @@ def _fetcher(search_text):
 
 resp_writer = defaultdict(list)
 
-for item in sofa_arr:
-  resp_writer['sofa'].append(_fetcher(item))
+#for item in per_arr:
+#  resp_writer['person'].append(_fetcher(item))
+
+#for item in air_arr:
+#  resp_writer['aeroplane'].append(_fetcher(item))
+
+#for item in bike_arr:
+#  resp_writer['bike'].append(_fetcher(item))
+
+#for item in tv_arr:
+#  resp_writer['tv'].append(_fetcher(item))
+
+#for item in sofa_arr:
+#  resp_writer['sofa'].append(_fetcher(item))
+
+#for item in other_arr:
+#  resp_writer[item].append(_fetcher(item))
   
 
-with open('/Users/vgurswamy/Desktop/data.html', 'w') as outfile:
+with open('/##', 'w') as outfile:
   json.dump(resp_writer, outfile, indent = 4)
 
 
