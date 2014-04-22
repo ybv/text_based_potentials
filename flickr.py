@@ -8,7 +8,7 @@ import nltk
 import codecs
 from collections import defaultdict
 
-api_key = '611####4c5f879a0bd0e5f'
+api_key = '61145ac716dc622244c5f879a0bd0e5f'
 sp = Parser()
 sent = nltk.data.load('tokenizers/punkt/english.pickle')
 
@@ -60,25 +60,25 @@ bike_arr = ['bicycle', 'motorbike', 'bike']
 sofa_arr = ['couch', 'sofa']
 tv_arr =['tv','monitor']
 other_arr = ['boat', 'bus', 'car', 'train', 'bottle', 'chair', 'dining table', 'potted plant',  'flower', 'laptop', 'tiger', 'window']
+dum_arr =['tiger','window']
+
+all_objs = per_arr + air_arr + bike_arr + sofa_arr + tv_arr + other_arr +dum_arr
 
 attr = ['black', 'blue', 'brown', 'gray', 'green', 'orange', 'pink', 'red', 'violet', 'white', 'yellow', 'spotted', 'striped','long', 'round', 'rectangular', 'square', 'furry', 'smooth', 'rough', 'shiny', 'metallic', 'vegetation', 'wooden', 'wet']
 
-def filter_value( someList, value ):
-  for x, y in someList:
-    if x == 1:
-      yield x,y
+
 
 
 def _fetcher(search_text):
   flickr = flickrapi.FlickrAPI(api_key, format='json')
   ret_dict = defaultdict(dict)
-  for x in xrange(1,2):
+  for x in xrange(1,3):
     sets = flickr.photos_search(text=search_text,per_page='500', page=x,extras='description')
     sets = sets.replace('jsonFlickrApi', '').strip('()')
     jsets = json.loads( sets, object_hook=_decode_dict )
     photoset_group = jsets['photos']['photo']
     for photo in photoset_group:
-      if strip_tags(photo['description']['_content'])!= '':
+      if strip_tags(photo['description']['_content'])!= '' and search_text in photo['description']['_content']:
         content = strip_tags(photo['description']['_content'])
         import unicodedata
         for sentence in sent.tokenize(unicodedata.normalize('NFKD', content).encode('ascii','ignore').strip().decode('utf8')):
@@ -87,45 +87,34 @@ def _fetcher(search_text):
               dep = sp.parseToStanfordDependencies(sentence)
               tupleResult = [(rel, gov.text, dep.text) for rel, gov, dep in dep.dependencies]
               for tup in tupleResult:
-                if tup[0]=='amod':
-                  if tup[2] in attr:
-                    if tup[1] in ret_dict:
-                      if tup[2] in ret_dict[tup[1]]:
-                        print "att already exists"
-                        cnt = ret_dict[tup[1]][tup[2]]
-                        cnt = cnt + 1
-                        ret_dict[tup[1]][tup[2]] = cnt
-                      else:
-                        ret_dict[tup[1]][tup[2]] = 1
-                    else:
-                      ret_dict[tup[1]] = {tup[2] : 1}
+                if (tup[0]=='amod') and (tup[1] in all_objs) and (tup[2] in attr):
+                  print tup[1]
+                  if tup[2] in ret_dict:
+                    cnt = ret_dict[tup[2]]
+                    cnt = cnt + 1
+                    ret_dict[tup[2]] = cnt
+                  else:
+                    ret_dict[tup[2]] = 1
             except :
               pass
   return ret_dict
 
+
+
 resp_writer = defaultdict(list)
+for item in per_arr:
+  resp_writer['person'].append(_fetcher(item))
 
-#for item in per_arr:
-#  resp_writer['person'].append(_fetcher(item))
-
-#for item in air_arr:
-#  resp_writer['aeroplane'].append(_fetcher(item))
-
-#for item in bike_arr:
-#  resp_writer['bike'].append(_fetcher(item))
+with open("/Users/vgurswamy/Desktop/data.html","wb") as outfile:
+  json.dump(resp_writer, outfile, indent = 4)
 
 #for item in tv_arr:
 #  resp_writer['tv'].append(_fetcher(item))
 
-#for item in sofa_arr:
-#  resp_writer['sofa'].append(_fetcher(item))
-
 #for item in other_arr:
 #  resp_writer[item].append(_fetcher(item))
-  
 
-with open('/##', 'w') as outfile:
-  json.dump(resp_writer, outfile, indent = 4)
+
 
 
 
